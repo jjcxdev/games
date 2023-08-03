@@ -27,12 +27,12 @@ model Account {
     type              String
     provider          String
     providerAccountId String
-    refresh_token     String? // @db.Text
-    access_token      String? // @db.Text
+    refresh_token     String? 
+    access_token      String?
     expires_at        Int?
     token_type        String?
     scope             String?
-    id_token          String? // @db.Text
+    id_token          String?
     session_state     String?
     user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -48,13 +48,17 @@ model Session {
 }
 
 model User {
-    id            String    @id @default(cuid())
-    name          String?
-    email         String?   @unique
-    emailVerified DateTime?
-    image         String?
-    accounts      Account[]
-    sessions      Session[]
+  id               String        @id @default(cuid())
+  name             String?
+  email            String?       @unique
+  emailVerified    DateTime?
+  image            String?
+  steamId          String?       
+  games            Game[]        
+  sentRequests     FriendRequest[] @relation("SentRequests")
+  receivedRequests FriendRequest[] @relation("ReceivedRequests")
+  accounts         Account[]
+  sessions         Session[]
 }
 
 model VerificationToken {
@@ -63,4 +67,25 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+model Game {
+  id           Int    @id @default(autoincrement())
+  steamGameId  String @unique
+  title        String
+  multiplayer  Boolean
+  crossplay    Boolean
+  users        User[]
+}
+
+model FriendRequest {
+  id         Int     @id @default(autoincrement())
+  sender     User    @relation("SentRequests", fields: [senderId], references: [id])
+  senderId   String
+  receiver   User    @relation("ReceivedRequests", fields: [receiverId], references: [id])
+  receiverId String
+  status     String  @default("PENDING")
+  createdAt  DateTime @default(now())
+
+  @@unique([senderId, receiverId])
 }
